@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(VulkanTutorial)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 # Source and Header Files ========================================================
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -20,7 +20,7 @@ list(REMOVE_DUPLICATES INCLUDE_DIRS)
 # Executable definition and properties ============================================
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE "${INCLUDE_DIRS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O2 -Wextra -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O2 -Wextra -Wall")
 
 # Vulkan ==========================================================================
 # Use FindVulkan module added with CMAKE 3.7
