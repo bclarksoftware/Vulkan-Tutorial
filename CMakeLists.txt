@@ -20,7 +20,10 @@ list(REMOVE_DUPLICATES INCLUDE_DIRS)
 # Executable definition and properties ============================================
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE "${INCLUDE_DIRS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O2 -Wextra -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wextra -Wall -Wno-error")
+
+#Asset directory
+target_compile_definitions(${PROJECT_NAME} PRIVATE ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")
 
 # Vulkan ==========================================================================
 # Use FindVulkan module added with CMAKE 3.7
@@ -61,4 +64,12 @@ option(ASSIMP_BUILD_TESTS OFF)
 add_subdirectory("${ASSIMP_DIR}")
 target_link_libraries(${PROJECT_NAME} assimp "${ASSIMP_LIBRARY}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${ASSIMP_DIR}/include")
+target_compile_options(assimp PRIVATE -Wno-error)
+
+# glslang - GLSL/HLSL to SPIR-V.
+set(GLSLANG_DIR "${LIB_DIR}/glslang")
+add_subdirectory("${GLSLANG_DIR}")
+target_link_libraries(${PROJECT_NAME} glslang "${GLSLANG_DIR}/glslang")
+target_link_libraries(${PROJECT_NAME} SPIRV "${GLSLANG_DIR}/SPIRV")
+target_include_directories(${PROJECT_NAME} PRIVATE "${GLSLANG_DIR}")
 
