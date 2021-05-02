@@ -53,6 +53,10 @@ add_subdirectory("${GLM_DIR}")
 target_link_libraries(${PROJECT_NAME} glm "${GLM_LIBRARIES}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLM_DIR}/include")
 
+# stb headers (Image Libraries) ===================================================
+set(STB_DIR "${LIB_DIR}/stb")
+target_include_directories(${PROJECT_NAME} PRIVATE "${STB_DIR}")
+
 # Assimp (Open Asset Importer Library) ============================================
 set(ASSIMP_DIR "${LIB_DIR}/assimp")
 set(BUILD_STATIC_LIB ON)
@@ -72,4 +76,3 @@ add_subdirectory("${GLSLANG_DIR}")
 target_link_libraries(${PROJECT_NAME} glslang "${GLSLANG_DIR}/glslang")
 target_link_libraries(${PROJECT_NAME} SPIRV "${GLSLANG_DIR}/SPIRV")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLSLANG_DIR}")
-

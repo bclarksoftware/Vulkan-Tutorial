@@ -15,6 +15,8 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
+#include "stb_image.h"
+
 #include "glsl/ShaderCompiler.hpp"
 
 const int WIDTH = 800;
