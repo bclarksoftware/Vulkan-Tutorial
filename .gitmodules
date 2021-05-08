@@ -9,10 +9,12 @@
 [submodule "lib/glm"]
 	path = lib/glm
 	url = git@github.com:bclarksoftware/glm.git
+	ignore = dirty
 
 [submodule "lib/glslang"]
 	path = lib/glslang
 	url = git@github.com:bclarksoftware/glslang.git
+	ignore = dirty
 
 [submodule "lib/stb"]
 	path = lib/stb
