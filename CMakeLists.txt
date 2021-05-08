@@ -76,3 +76,9 @@ add_subdirectory("${GLSLANG_DIR}")
 target_link_libraries(${PROJECT_NAME} glslang "${GLSLANG_DIR}/glslang")
 target_link_libraries(${PROJECT_NAME} SPIRV "${GLSLANG_DIR}/SPIRV")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLSLANG_DIR}")
+
+# tinyobjloader Library ==========================================================
+set(TINYOBJLOADER_DIR "${LIB_DIR}/tinyobjloader")
+add_subdirectory("${TINYOBJLOADER_DIR}")
+target_link_libraries(${PROJECT_NAME} tinyobjloader)
+target_include_directories(${PROJECT_NAME} PRIVATE "${TINYOBJLOADER_INCLUDE_DIR}")
