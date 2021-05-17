@@ -9,7 +9,6 @@
 #include <map>
 #include <optional>
 #include <set>
-#include <chrono>
 #include <unordered_map>
 
 #define GLM_FORCE_RADIANS
@@ -29,6 +28,8 @@
 const int WIDTH = 800;
 const int HEIGHT = 600;
 const int MAX_FRAMES_IN_FLIGHT = 2;
+const float UPDATES_PER_SECOND = 1.0f / 60.0f;
+const float CAMERA_SPEED = 0.05f;
 
 const std::string MODEL_PATH = ASSET_DIR + std::string("/models/viking_room.obj");
 const std::string TEXTURE_PATH = ASSET_DIR + std::string("/textures/viking_room.png");
@@ -197,8 +198,20 @@ private:
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
+    float lastFrameTime = 0.0f;
+    float deltaFrameTime = 0.0f;
+
     size_t currentFrame = 0;
     bool framebufferResized = false;
+
+    // Camera
+    bool firstMouse = true;
+    float lastX, lastY;
+    float yaw = -90.0f;
+    float pitch = 0.0f;
+    glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, 3.0f);
+    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
     void initWindow() {
         glfwInit();
@@ -208,11 +221,74 @@ private:
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+        glfwSetKeyCallback(window, key_callback);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPosCallback(window, mouse_callback);
+
     }
 
     static void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
         auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
         app->framebufferResized = true;
+    }
+
+    static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+    {
+        auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
+
+        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
+    }
+
+    static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+        auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
+
+        if (app->firstMouse)
+        {
+            app->lastX = xpos;
+            app->lastY = ypos;
+            app->firstMouse = false;
+        }
+
+        float xoffset = xpos - app->lastX;
+        float yoffset = app->lastY - ypos;
+        app->lastX = xpos;
+        app->lastY = ypos;
+
+        float sensitivity = 0.1f;
+        xoffset *= sensitivity;
+        yoffset *= sensitivity;
+
+        app->yaw   += xoffset;
+        app->pitch += yoffset;
+
+        if(app->pitch > 89.0f)
+            app->pitch = 89.0f;
+        if(app->pitch < -89.0f)
+            app->pitch = -89.0f;
+
+        glm::vec3 direction;
+        direction.x = cos(glm::radians(app->yaw)) * cos(glm::radians(app->pitch));
+        direction.y = sin(glm::radians(app->pitch));
+        direction.z = sin(glm::radians(app->yaw)) * cos(glm::radians(app->pitch));
+        app->cameraFront = glm::normalize(direction);
+    }
+
+    void processUserInputs() {
+        float cameraSpeed = CAMERA_SPEED * deltaFrameTime;
+
+        glfwPollEvents();
+
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            cameraPos += cameraSpeed * cameraFront;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            cameraPos -= cameraSpeed * cameraFront;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+
     }
 
     bool checkValidationLayerSupport() {
@@ -1658,7 +1734,16 @@ private:
 
     void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
-            glfwPollEvents();
+            float currentFrameTime = glfwGetTime();
+            deltaFrameTime += (currentFrameTime - lastFrameTime) / UPDATES_PER_SECOND;
+            lastFrameTime = currentFrameTime;
+
+            // Only update at 60 FPS
+            while (deltaFrameTime >= 1.0) {
+                processUserInputs();
+                deltaFrameTime--;
+            }
+
             drawFrame();
         }
 
@@ -1666,14 +1751,10 @@ private:
     }
 
     void updateUniformBuffer(uint32_t currentImage) {
-        static auto startTime = std::chrono::high_resolution_clock::now(); //Initialized only once since static variable
-
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
         UniformBufferObject ubo{};
-        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * ubo.model;
+        ubo.view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 10.0f);
         ubo.proj[1][1] *= -1;
 
